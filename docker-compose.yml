@@ -1,0 +1,54 @@
+version: "2.0"
+services:
+    app:
+      build: ./nginx1.11
+      image: nginx1.11-boozt
+      container_name: boozt_app_1
+      links:
+        - phpfpm
+        - db
+      volumes_from:
+        - appdata
+      ports:
+        - "8040:80"
+        - "8944:443"
+
+    appdata:
+      container_name: boozt_appdata_1 
+      image: tianon/true
+      volumes:
+        - ./project-code:/var/www/html
+        - ./dumpvol/files:/dumpvol
+
+    phpfpm:
+      build: ./php7.1-fpm
+      image: php7.1-fpm-boozt
+      container_name: boozt_phpfpm_1
+      links:
+        - db
+      volumes_from:
+        - appdata
+      environment:
+        XDEBUG_CONFIG: remote_host=172.29.0.1
+      expose:
+        - "9000"
+        - "9001"
+      
+    db:
+      build: ./percona5.7
+      image: percona5.7-boozt
+      container_name: boozt_db_1
+      volumes_from:
+        - dbdata
+      ports:
+        - 8037:3306
+      env_file: env/mysql.env
+
+    dbdata:
+      container_name: boozt_dbdata_1
+      image: tianon/true
+      volumes:
+        - ./var/lib/mysql:/var/lib/mysql
+        - ./dumpvol/db:/dumpvol
+
+
